@@ -1,0 +1,93 @@
+{% extends "admin/base_admin.html" %}
+{% set active = "reports" %}
+{% block page_icon %}📈{% endblock %}
+{% block page_title %}Reports{% endblock %}
+
+{% block content %}
+<!-- Filters -->
+<div class="card mb-4">
+  <form method="GET" class="flex gap-3 items-end" style="flex-wrap:wrap">
+    <div class="form-group" style="margin:0;flex:1;min-width:160px">
+      <label class="form-label">Department</label>
+      <select name="dept" class="form-control">
+        <option value="">All Departments</option>
+        {% for d in depts %}{% if d %}<option value="{{ d }}" {{ 'selected' if d==dept_f }}>{{ d }}</option>{% endif %}{% endfor %}
+      </select>
+    </div>
+    <div class="form-group" style="margin:0;flex:1;min-width:160px">
+      <label class="form-label">Sort By</label>
+      <select name="sort" class="form-control">
+        {% for s, l in [('perf_score','Performance Score'),('attendance','Attendance %'),('rating','Student Rating'),('experience','Experience')] %}
+        <option value="{{ s }}" {{ 'selected' if s==sort_by }}>{{ l }}</option>
+        {% endfor %}
+      </select>
+    </div>
+    <div><button type="submit" class="btn btn-primary">Apply</button></div>
+  </form>
+</div>
+
+<!-- Summary metrics -->
+{% if report %}
+{% set avg_perf = (report | sum(attribute='perf_score') / report|length) | round(1) %}
+{% set avg_att  = (report | sum(attribute='attendance') / report|length) | round(1) %}
+{% set avg_rat  = (report | sum(attribute='rating') / report|length) | round(2) %}
+<div class="metrics-grid mb-6">
+  <div class="metric-card blue"><div class="metric-icon blue">👥</div>
+    <div class="metric-value">{{ report | length }}</div><div class="metric-label">Teachers</div></div>
+  <div class="metric-card purple"><div class="metric-icon purple">⭐</div>
+    <div class="metric-value">{{ avg_perf }}</div><div class="metric-label">Avg Perf Score</div></div>
+  <div class="metric-card green"><div class="metric-icon green">📅</div>
+    <div class="metric-value">{{ avg_att }}%</div><div class="metric-label">Avg Attendance</div></div>
+  <div class="metric-card amber"><div class="metric-icon amber">🌟</div>
+    <div class="metric-value">{{ avg_rat }}</div><div class="metric-label">Avg Rating</div></div>
+</div>
+{% endif %}
+
+<div class="card">
+  <div class="card-header">
+    <div class="card-title">Teacher Performance Report</div>
+    <span style="font-size:12px;color:var(--text-muted)">{{ report | length }} teachers</span>
+  </div>
+  <div class="table-wrap">
+    <table>
+      <thead>
+        <tr><th>Name</th><th>Department</th><th>Attendance</th><th>Rating</th><th>Feedback</th><th>Perf Score</th><th>Status</th></tr>
+      </thead>
+      <tbody>
+        {% for r in report %}
+        {% set color = '#10B981' if r.perf_score >= 80 else '#38BDF8' if r.perf_score >= 65 else '#F59E0B' if r.perf_score >= 50 else '#EF4444' %}
+        <tr>
+          <td style="font-weight:500">{{ r.name }}</td>
+          <td><span class="badge badge-info">{{ r.department }}</span></td>
+          <td>
+            <div style="display:flex;align-items:center;gap:8px">
+              <div style="flex:1;background:var(--border);border-radius:20px;height:6px;overflow:hidden;width:60px">
+                <div style="width:{{ r.attendance | float | int }}%;background:{{ '#10B981' if r.attendance >= 90 else '#F59E0B' }};height:100%;border-radius:20px"></div>
+              </div>
+              <span style="font-size:12px;font-weight:600">{{ r.attendance }}%</span>
+            </div>
+          </td>
+          <td><span style="color:#FBBF24">{{ '%.1f' % r.rating }}</span>/5</td>
+          <td style="color:var(--text-muted)">{{ r.feedback_count }}</td>
+          <td>
+            <div style="display:flex;align-items:center;gap:6px">
+              <div style="width:40px;height:6px;background:var(--border);border-radius:20px;overflow:hidden">
+                <div style="width:{{ r.perf_score }}%;background:{{ color }};height:100%;border-radius:20px"></div>
+              </div>
+              <span style="font-size:13px;font-weight:700;color:{{ color }}">{{ r.perf_score }}</span>
+            </div>
+          </td>
+          <td>
+            <span class="badge {{ 'badge-success' if r.perf_label=='Outstanding' else 'badge-info' if r.perf_label=='Proficient' else 'badge-warning' if r.perf_label=='Developing' else 'badge-neutral' }}">
+              {{ r.perf_label }}
+            </span>
+          </td>
+        </tr>
+        {% else %}
+        <tr><td colspan="7" style="text-align:center;padding:32px;color:var(--text-dim)">No data found</td></tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</div>
+{% endblock %}

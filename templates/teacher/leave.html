@@ -1,0 +1,92 @@
+{% extends "teacher/base_teacher.html" %}
+{% set active = "leave" %}
+{% block page_icon %}📋{% endblock %}
+{% block page_title %}Leave Requests{% endblock %}
+
+{% block content %}
+<div class="grid-2" style="gap:20px;margin-bottom:24px">
+  <!-- Apply for leave -->
+  <div class="card">
+    <div class="card-header"><div class="card-title">Apply for Leave</div></div>
+    <form method="POST" action="/teacher/leave/apply">
+      <div class="form-group">
+        <label class="form-label">Leave Type</label>
+        <select name="leave_type" class="form-control">
+          {% for lt in leave_types %}
+          <option>{{ lt }}</option>
+          {% endfor %}
+        </select>
+      </div>
+      <div class="form-row">
+        <div class="form-group">
+          <label class="form-label">From Date</label>
+          <input type="date" name="from_date" class="form-control" min="{{ today }}" value="{{ today }}" required>
+        </div>
+        <div class="form-group">
+          <label class="form-label">To Date</label>
+          <input type="date" name="to_date" class="form-control" min="{{ today }}" value="{{ today }}" required>
+        </div>
+      </div>
+      <div class="form-group">
+        <label class="form-label">Reason</label>
+        <textarea name="reason" class="form-control" rows="3" placeholder="Briefly describe your reason..." required></textarea>
+      </div>
+      <button type="submit" class="btn btn-primary w-full">📤 Submit Request</button>
+    </form>
+  </div>
+
+  <!-- Leave Balance -->
+  <div class="card">
+    <div class="card-header"><div class="card-title">Leave Balance</div></div>
+    {% for b in balance %}
+    {% set used_pct = ((b.used_days / b.total_days) * 100) | int if b.total_days > 0 else 0 %}
+    <div style="margin-bottom:14px">
+      <div class="flex justify-between items-center mb-1">
+        <span style="font-size:13px;font-weight:500">{{ b.leave_type }}</span>
+        <span style="font-size:12px;color:var(--text-muted)">{{ b.available_days }} / {{ b.total_days }} left</span>
+      </div>
+      <div style="background:var(--border);border-radius:20px;height:7px;overflow:hidden">
+        <div style="width:{{ used_pct }}%;background:{{ '#EF4444' if used_pct > 75 else '#6366F1' }};
+             height:100%;border-radius:20px;transition:width .5s"></div>
+      </div>
+    </div>
+    {% endfor %}
+  </div>
+</div>
+
+<!-- My Requests -->
+<div class="card">
+  <div class="card-header"><div class="card-title">My Leave History</div></div>
+  {% if requests %}
+  <div style="display:flex;flex-direction:column;gap:10px">
+    {% for req in requests %}
+    {% set color = '#10B981' if req.status=='Approved' else '#EF4444' if req.status=='Rejected' else '#F59E0B' if req.status=='Pending' else '#94A3B8' %}
+    <div style="padding:14px 16px;background:var(--bg);border-radius:10px;border-left:4px solid {{ color }}">
+      <div class="flex justify-between items-center">
+        <span style="font-weight:600;font-size:14px">{{ req.leave_type }}</span>
+        <span class="badge {{ 'badge-success' if req.status=='Approved' else 'badge-danger' if req.status=='Rejected' else 'badge-warning' if req.status=='Pending' else 'badge-neutral' }}">
+          {{ req.status }}
+        </span>
+      </div>
+      <div style="font-size:12px;color:var(--text-muted);margin-top:4px">
+        📅 {{ req.from_date }} → {{ req.to_date }} · {{ req.days_requested }} day(s)
+      </div>
+      <div style="font-size:12px;color:var(--text-dim);margin-top:2px">{{ req.reason }}</div>
+      {% if req.admin_note %}
+      <div style="font-size:12px;color:#818CF8;margin-top:4px">💬 Admin: {{ req.admin_note }}</div>
+      {% endif %}
+      {% if req.status == 'Pending' %}
+      <form method="POST" action="/teacher/leave/cancel/{{ req.id }}" style="margin-top:8px">
+        <button class="btn btn-danger btn-sm">Cancel Request</button>
+      </form>
+      {% endif %}
+    </div>
+    {% endfor %}
+  </div>
+  {% else %}
+  <div style="text-align:center;padding:32px;color:var(--text-dim);font-size:13px">
+    No leave requests yet
+  </div>
+  {% endif %}
+</div>
+{% endblock %}

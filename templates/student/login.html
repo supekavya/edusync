@@ -1,0 +1,84 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>EDUSYNC — Student Feedback</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+:root{--bg:#0F172A;--surface:#1E293B;--border:#334155;--primary:#6366F1;--text:#F1F5F9;--muted:#94A3B8}
+body{font-family:'Inter',sans-serif;background:var(--bg);color:var(--text);
+  min-height:100vh;display:flex;align-items:center;justify-content:center}
+body::before{content:'';position:fixed;inset:0;
+  background-image:linear-gradient(rgba(99,102,241,0.03) 1px,transparent 1px),
+  linear-gradient(90deg,rgba(99,102,241,0.03) 1px,transparent 1px);
+  background-size:40px 40px;pointer-events:none}
+.wrap{width:100%;max-width:420px;padding:20px;position:relative;z-index:1}
+.brand{text-align:center;margin-bottom:28px}
+.brand-icon{width:52px;height:52px;border-radius:14px;
+  background:linear-gradient(135deg,#6366F1,#4F46E5);
+  display:flex;align-items:center;justify-content:center;
+  margin:0 auto 12px;font-size:26px}
+.brand-name{font-size:22px;font-weight:700}
+.brand-sub{font-size:13px;color:var(--muted);margin-top:4px}
+.card{background:var(--surface);border:1px solid var(--border);
+  border-radius:16px;padding:28px 32px;box-shadow:0 4px 32px rgba(0,0,0,0.4)}
+.card-title{font-size:16px;font-weight:700;margin-bottom:4px}
+.card-sub{font-size:13px;color:var(--muted);margin-bottom:22px}
+.form-group{margin-bottom:16px}
+.form-label{display:block;font-size:11px;font-weight:700;color:var(--muted);
+  text-transform:uppercase;letter-spacing:.07em;margin-bottom:6px}
+.form-control{width:100%;background:#0F172A;border:1.5px solid var(--border);
+  border-radius:8px;padding:10px 14px;color:var(--text);
+  font-size:14px;font-family:'Inter',sans-serif;transition:border-color .15s}
+.form-control:focus{outline:none;border-color:#6366F1;box-shadow:0 0 0 3px rgba(99,102,241,0.15)}
+.form-control::placeholder{color:#475569}
+.btn{width:100%;padding:11px;border:none;border-radius:8px;
+  background:linear-gradient(135deg,#6366F1,#4F46E5);color:#fff;
+  font-size:14px;font-weight:700;cursor:pointer;font-family:'Inter',sans-serif;
+  box-shadow:0 2px 12px rgba(99,102,241,0.35);transition:all .18s;margin-top:4px}
+.btn:hover{box-shadow:0 4px 20px rgba(99,102,241,0.55);transform:translateY(-1px)}
+.alert{padding:10px 14px;border-radius:8px;font-size:13px;margin-bottom:16px;
+  background:rgba(239,68,68,0.1);border-left:3px solid #EF4444;color:#FCA5A5}
+.orb{position:fixed;border-radius:50%;filter:blur(80px);pointer-events:none}
+.orb1{width:280px;height:280px;background:rgba(99,102,241,0.1);top:-60px;right:-40px}
+.orb2{width:220px;height:220px;background:rgba(16,185,129,0.06);bottom:-40px;left:-30px}
+</style>
+</head>
+<body>
+<div class="orb orb1"></div>
+<div class="orb orb2"></div>
+<div class="wrap">
+  <div class="brand">
+    <div class="brand-icon">💬</div>
+    <div class="brand-name">Student Feedback</div>
+    <div class="brand-sub">CVR College of Engineering · EDUSYNC</div>
+  </div>
+  <div class="card">
+    <div class="card-title">Share your feedback</div>
+    <div class="card-sub">Enter your details to continue</div>
+
+    {% with messages = get_flashed_messages(with_categories=true) %}
+      {% for category, message in messages %}
+        <div class="alert">{{ message }}</div>
+      {% endfor %}
+    {% endwith %}
+
+    <form method="POST">
+      <div class="form-group">
+        <label class="form-label">Your Full Name</label>
+        <input type="text" name="name" class="form-control"
+               placeholder="e.g. Rahul Sharma" required autofocus>
+      </div>
+      <div class="form-group">
+        <label class="form-label">Roll Number</label>
+        <input type="text" name="roll_no" class="form-control"
+               placeholder="e.g. 21B01A0501" required>
+      </div>
+      <button type="submit" class="btn">Continue →</button>
+    </form>
+  </div>
+</div>
+</body>
+</html>

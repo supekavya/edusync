@@ -1,0 +1,99 @@
+{% extends "teacher/base_teacher.html" %}
+{% set active = "profile" %}
+{% block page_icon %}👤{% endblock %}
+{% block page_title %}My Profile{% endblock %}
+
+{% block content %}
+{% set color = '#10B981' if perf >= 80 else '#38BDF8' if perf >= 65 else '#F59E0B' if perf >= 50 else '#EF4444' %}
+{% set label = 'Outstanding' if perf >= 80 else 'Proficient' if perf >= 65 else 'Developing' if perf >= 50 else 'Needs Support' %}
+
+<!-- Header card -->
+<div style="padding:22px 24px;background:var(--surface);border-radius:14px;
+     border:1px solid var(--border);border-left:5px solid {{ color }};margin-bottom:20px">
+  <div style="font-size:20px;font-weight:700">{{ teacher.name }}</div>
+  <div style="font-size:13px;color:var(--text-muted);margin-top:3px">
+    {{ teacher.department }} · {{ teacher.subject }}
+  </div>
+  <div style="margin-top:10px;display:flex;align-items:center;gap:12px">
+    <span style="font-size:22px;font-weight:700;color:{{ color }}">⭐ {{ label }}</span>
+    <span style="font-size:13px;color:var(--text-muted)">Performance score: {{ perf }} / 100</span>
+  </div>
+</div>
+
+<div class="metrics-grid mb-6">
+  <div class="metric-card blue">
+    <div class="metric-icon blue">🎓</div>
+    <div class="metric-value">{{ teacher.experience_years }}</div>
+    <div class="metric-label">Years Experience</div>
+  </div>
+  <div class="metric-card {{ 'green' if stats.attendance_percent >= 90 else 'amber' }}">
+    <div class="metric-icon {{ 'green' if stats.attendance_percent >= 90 else 'amber' }}">📅</div>
+    <div class="metric-value">{{ stats.attendance_percent }}%</div>
+    <div class="metric-label">Attendance</div>
+  </div>
+  <div class="metric-card amber">
+    <div class="metric-icon amber">⭐</div>
+    <div class="metric-value">{{ teacher.student_rating }}/5</div>
+    <div class="metric-label">Student Rating</div>
+  </div>
+  <div class="metric-card purple">
+    <div class="metric-icon purple">💬</div>
+    <div class="metric-value">{{ fb_df | length }}</div>
+    <div class="metric-label">Feedback Received</div>
+  </div>
+</div>
+
+<div class="grid-2" style="gap:20px">
+  <!-- Score breakdown -->
+  <div class="card">
+    <div class="card-title mb-4">Performance Score Breakdown</div>
+    {% for label, contrib, color_bar in [
+      ('Attendance (40%)', att_contrib, '#10B981'),
+      ('Student Rating (40%)', rat_contrib, '#6366F1'),
+      ('Sentiment (20%)', sent_contrib, '#F59E0B')
+    ] %}
+    <div style="margin-bottom:14px">
+      <div class="flex justify-between items-center mb-1">
+        <span style="font-size:12px;font-weight:500">{{ label }}</span>
+        <span style="font-size:12px;font-weight:700;color:{{ color_bar }}">{{ contrib }} pts</span>
+      </div>
+      <div style="background:var(--border);border-radius:20px;height:8px;overflow:hidden">
+        <div style="width:{{ (contrib / 40 * 100) | int }}%;background:{{ color_bar }};
+             height:100%;border-radius:20px"></div>
+      </div>
+    </div>
+    {% endfor %}
+    <div style="padding:12px;background:rgba(99,102,241,0.08);border-radius:8px;text-align:center;margin-top:8px">
+      <span style="font-size:18px;font-weight:700;color:#818CF8">{{ perf }} / 100</span>
+      <div style="font-size:11px;color:var(--text-muted);margin-top:2px">Overall score</div>
+    </div>
+  </div>
+
+  <!-- Feedback breakdown -->
+  <div class="card">
+    <div class="card-title mb-4">Student Feedback Summary</div>
+    {% if fb_df %}
+      {% for item, count, color_fb in [('Appreciative', pos, '#10B981'), ('Neutral', neu, '#94A3B8'), ('Mixed', neg, '#F59E0B')] %}
+      <div style="margin-bottom:12px">
+        <div class="flex justify-between items-center mb-1">
+          <span style="font-size:12px;font-weight:500;color:{{ color_fb }}">{{ item }}</span>
+          <span style="font-size:12px;font-weight:700">{{ count }}</span>
+        </div>
+        <div style="background:var(--border);border-radius:20px;height:7px;overflow:hidden">
+          <div style="width:{{ ((count / fb_df|length) * 100) | int if fb_df|length > 0 else 0 }}%;
+               background:{{ color_fb }};height:100%;border-radius:20px"></div>
+        </div>
+      </div>
+      {% endfor %}
+      <div style="margin-top:16px;padding:12px;background:var(--bg);border-radius:8px;text-align:center">
+        <div style="font-size:12px;color:var(--text-muted);margin-bottom:4px">Total responses</div>
+        <div style="font-size:22px;font-weight:700;color:#818CF8">{{ fb_df | length }}</div>
+      </div>
+    {% else %}
+      <div style="text-align:center;padding:24px;color:var(--text-dim);font-size:13px">
+        No feedback received yet
+      </div>
+    {% endif %}
+  </div>
+</div>
+{% endblock %}

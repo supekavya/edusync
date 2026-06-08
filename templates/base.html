@@ -1,0 +1,355 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>EDUSYNC — {{ title | default("Dashboard") }}</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/apexcharts@3.45.1/dist/apexcharts.min.js"></script>
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+:root{
+  --bg:#0F172A;--surface:#1E293B;--surface2:#263348;--border:#334155;
+  --primary:#6366F1;--primary-light:#818CF8;--primary-dark:#4F46E5;
+  --success:#10B981;--warning:#F59E0B;--danger:#EF4444;--info:#38BDF8;
+  --text:#F1F5F9;--text-muted:#94A3B8;--text-dim:#64748B;
+  --radius:12px;--radius-sm:8px;--sidebar-w:240px;
+}
+body{font-family:'Inter',sans-serif;background:var(--bg);color:var(--text);min-height:100vh;display:flex}
+
+/* ── Sidebar ── */
+.sidebar{width:var(--sidebar-w);background:linear-gradient(180deg,#1E1B4B 0%,#1a1744 100%);
+  display:flex;flex-direction:column;position:fixed;top:0;left:0;height:100vh;z-index:100;
+  border-right:1px solid rgba(99,102,241,0.2)}
+.sidebar-logo{padding:24px 20px 20px;border-bottom:1px solid rgba(255,255,255,0.08)}
+.logo-row{display:flex;align-items:center;gap:12px}
+.logo-icon{width:36px;height:36px;border-radius:10px;
+  background:linear-gradient(135deg,#6366F1,#4F46E5);
+  display:flex;align-items:center;justify-content:center;flex-shrink:0}
+.logo-icon svg{width:20px;height:20px;color:#fff}
+.logo-text{font-size:16px;font-weight:700;color:#fff;letter-spacing:-.01em}
+.logo-sub{font-size:10px;color:#818CF8;font-weight:500;margin-top:1px}
+.sidebar-section{padding:16px 12px 4px;font-size:10px;font-weight:700;
+  color:#4F46E5;text-transform:uppercase;letter-spacing:.1em}
+.nav-item{display:flex;align-items:center;gap:10px;padding:9px 16px;
+  border-radius:var(--radius-sm);margin:1px 8px;cursor:pointer;
+  color:#A5B4FC;font-size:13.5px;font-weight:500;text-decoration:none;
+  transition:all .15s}
+.nav-item svg{width:16px;height:16px;flex-shrink:0}
+.nav-item:hover{background:rgba(255,255,255,0.07);color:#C7D2FE}
+.nav-item.active{background:rgba(99,102,241,0.25);color:#fff;font-weight:600}
+.nav-item.active svg{color:#818CF8}
+.sidebar-footer{margin-top:auto;padding:16px 12px;border-top:1px solid rgba(255,255,255,0.08)}
+.user-card{display:flex;align-items:center;gap:10px;padding:10px 12px;
+  background:rgba(255,255,255,0.05);border-radius:var(--radius-sm)}
+.user-avatar{width:32px;height:32px;border-radius:8px;
+  background:linear-gradient(135deg,#6366F1,#818CF8);
+  display:flex;align-items:center;justify-content:center;
+  font-size:12px;font-weight:700;color:#fff;flex-shrink:0}
+.user-name{font-size:13px;font-weight:600;color:#fff}
+.user-role{font-size:11px;color:#818CF8}
+.logout-btn{display:flex;align-items:center;gap:6px;padding:6px 12px;
+  margin-top:8px;border-radius:var(--radius-sm);color:#F87171;font-size:13px;
+  font-weight:500;text-decoration:none;transition:all .15s}
+.logout-btn:hover{background:rgba(239,68,68,0.1)}
+.logout-btn svg{width:14px;height:14px}
+
+/* ── Main content ── */
+.main{margin-left:var(--sidebar-w);flex:1;display:flex;flex-direction:column;min-height:100vh}
+.topbar{background:var(--surface);border-bottom:1px solid var(--border);
+  padding:14px 28px;display:flex;align-items:center;justify-content:space-between;
+  position:sticky;top:0;z-index:50}
+.topbar-left{display:flex;align-items:center;gap:12px}
+.page-icon{font-size:20px}
+.page-title{font-size:15px;font-weight:700;color:var(--text)}
+.topbar-right{display:flex;align-items:center;gap:10px}
+.topbar-badge{background:rgba(99,102,241,0.15);color:#818CF8;
+  font-size:11px;font-weight:600;padding:4px 10px;border-radius:20px;
+  border:1px solid rgba(99,102,241,0.3)}
+.topbar-date{font-size:12px;color:var(--text-muted);
+  background:var(--bg);padding:5px 12px;border-radius:20px;
+  border:1px solid var(--border)}
+.content{padding:24px 28px;flex:1}
+
+/* ── Cards ── */
+.card{background:var(--surface);border:1px solid var(--border);
+  border-radius:var(--radius);padding:20px}
+.card-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:16px}
+.card-title{font-size:14px;font-weight:600;color:var(--text)}
+.card-subtitle{font-size:12px;color:var(--text-muted);margin-top:2px}
+
+/* ── Metric cards ── */
+.metrics-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:14px;margin-bottom:24px}
+.metric-card{background:var(--surface);border:1px solid var(--border);
+  border-radius:var(--radius);padding:18px 20px;position:relative;overflow:hidden;
+  transition:transform .2s,box-shadow .2s}
+.metric-card:hover{transform:translateY(-3px);box-shadow:0 8px 24px rgba(0,0,0,0.3)}
+.metric-card::before{content:'';position:absolute;top:0;left:0;right:0;height:3px}
+.metric-card.blue::before{background:linear-gradient(90deg,#6366F1,#818CF8)}
+.metric-card.green::before{background:linear-gradient(90deg,#10B981,#34D399)}
+.metric-card.amber::before{background:linear-gradient(90deg,#F59E0B,#FBBF24)}
+.metric-card.red::before{background:linear-gradient(90deg,#EF4444,#F87171)}
+.metric-card.purple::before{background:linear-gradient(90deg,#7C3AED,#A78BFA)}
+.metric-card.teal::before{background:linear-gradient(90deg,#0D9488,#2DD4BF)}
+.metric-icon{width:38px;height:38px;border-radius:10px;
+  display:flex;align-items:center;justify-content:center;
+  margin-bottom:12px;font-size:18px}
+.metric-icon.blue{background:rgba(99,102,241,0.15)}
+.metric-icon.green{background:rgba(16,185,129,0.15)}
+.metric-icon.amber{background:rgba(245,158,11,0.15)}
+.metric-icon.red{background:rgba(239,68,68,0.15)}
+.metric-icon.purple{background:rgba(124,58,237,0.15)}
+.metric-icon.teal{background:rgba(13,148,136,0.15)}
+.metric-value{font-size:26px;font-weight:700;color:var(--text);line-height:1}
+.metric-label{font-size:11px;font-weight:600;color:var(--text-muted);
+  text-transform:uppercase;letter-spacing:.06em;margin-top:4px}
+.metric-delta{font-size:11px;font-weight:600;margin-top:6px}
+.metric-delta.up{color:#10B981}
+.metric-delta.down{color:#EF4444}
+.metric-delta.neutral{color:#94A3B8}
+
+/* ── Section header ── */
+.section-label{font-size:10px;font-weight:700;color:#6366F1;
+  text-transform:uppercase;letter-spacing:.1em;margin-bottom:12px}
+
+/* ── Tables ── */
+.table-wrap{overflow-x:auto;border-radius:var(--radius);border:1px solid var(--border)}
+table{width:100%;border-collapse:collapse;font-size:13.5px}
+thead th{background:rgba(99,102,241,0.08);color:var(--text-muted);
+  font-size:11px;font-weight:700;text-transform:uppercase;
+  letter-spacing:.06em;padding:12px 16px;text-align:left;
+  border-bottom:1px solid var(--border)}
+tbody td{padding:12px 16px;border-bottom:1px solid rgba(51,65,85,0.5);
+  color:var(--text);vertical-align:middle}
+tbody tr:last-child td{border-bottom:none}
+tbody tr:hover td{background:rgba(99,102,241,0.05)}
+
+/* ── Badges ── */
+.badge{display:inline-flex;align-items:center;font-size:11px;font-weight:600;
+  padding:3px 10px;border-radius:20px}
+.badge-success{background:rgba(16,185,129,0.15);color:#34D399}
+.badge-warning{background:rgba(245,158,11,0.15);color:#FBBF24}
+.badge-danger{background:rgba(239,68,68,0.15);color:#F87171}
+.badge-info{background:rgba(99,102,241,0.15);color:#818CF8}
+.badge-neutral{background:rgba(148,163,184,0.15);color:#94A3B8}
+
+/* ── Buttons ── */
+.btn{display:inline-flex;align-items:center;gap:6px;padding:8px 16px;
+  border-radius:var(--radius-sm);font-size:13px;font-weight:600;
+  cursor:pointer;border:none;transition:all .18s;text-decoration:none}
+.btn-primary{background:linear-gradient(135deg,#6366F1,#4F46E5);color:#fff;
+  box-shadow:0 2px 10px rgba(99,102,241,0.35)}
+.btn-primary:hover{box-shadow:0 4px 18px rgba(99,102,241,0.55);transform:translateY(-1px)}
+.btn-secondary{background:var(--surface2);color:var(--text-muted);border:1px solid var(--border)}
+.btn-secondary:hover{background:var(--border);color:var(--text)}
+.btn-danger{background:rgba(239,68,68,0.1);color:#F87171;border:1px solid rgba(239,68,68,0.2)}
+.btn-danger:hover{background:rgba(239,68,68,0.2)}
+.btn-sm{padding:5px 12px;font-size:12px}
+
+/* ── Forms ── */
+.form-group{margin-bottom:16px}
+.form-label{display:block;font-size:12px;font-weight:600;color:var(--text-muted);
+  text-transform:uppercase;letter-spacing:.06em;margin-bottom:6px}
+.form-control{width:100%;background:var(--bg);border:1.5px solid var(--border);
+  border-radius:var(--radius-sm);padding:9px 14px;color:var(--text);
+  font-size:13.5px;font-family:'Inter',sans-serif;transition:border-color .15s}
+.form-control:focus{outline:none;border-color:#6366F1;
+  box-shadow:0 0 0 3px rgba(99,102,241,0.15)}
+select.form-control option{background:var(--surface)}
+.form-row{display:grid;grid-template-columns:1fr 1fr;gap:16px}
+
+/* ── Alerts ── */
+.alert{padding:12px 16px;border-radius:var(--radius-sm);
+  font-size:13.5px;margin-bottom:16px;border-left:4px solid}
+.alert-success{background:rgba(16,185,129,0.1);border-color:#10B981;color:#6EE7B7}
+.alert-error{background:rgba(239,68,68,0.1);border-color:#EF4444;color:#FCA5A5}
+.alert-warning{background:rgba(245,158,11,0.1);border-color:#F59E0B;color:#FCD34D}
+.alert-info{background:rgba(99,102,241,0.1);border-color:#6366F1;color:#A5B4FC}
+
+/* ── Misc ── */
+.divider{border:none;border-top:1px solid var(--border);margin:20px 0}
+.text-muted{color:var(--text-muted)}
+.text-dim{color:var(--text-dim)}
+.flex{display:flex}.items-center{align-items:center}.gap-2{gap:8px}.gap-3{gap:12px}
+.justify-between{justify-content:space-between}
+.grid-2{display:grid;grid-template-columns:1fr 1fr;gap:16px}
+.grid-3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:16px}
+.mt-1{margin-top:4px}.mt-2{margin-top:8px}.mt-3{margin-top:12px}.mt-4{margin-top:16px}.mt-6{margin-top:24px}
+.mb-4{margin-bottom:16px}.mb-6{margin-bottom:24px}
+.w-full{width:100%}
+.chart-container{position:relative;width:100%}
+
+/* ── Scrollbar ── */
+::-webkit-scrollbar{width:6px;height:6px}
+::-webkit-scrollbar-track{background:var(--bg)}
+::-webkit-scrollbar-thumb{background:var(--border);border-radius:3px}
+::-webkit-scrollbar-thumb:hover{background:#475569}
+</style>
+{% block extra_head %}{% endblock %}
+</head>
+<body>
+
+<!-- SIDEBAR -->
+<aside class="sidebar">
+  <div class="sidebar-logo">
+    <div class="logo-row">
+      <div class="logo-icon">
+        <svg fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+          <path stroke-linecap="round" stroke-linejoin="round" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253"/>
+        </svg>
+      </div>
+      <div>
+        <div class="logo-text">EDUSYNC</div>
+        <div class="logo-sub">{% if session.role == 'admin' %}Admin Portal{% else %}Teacher Portal{% endif %}</div>
+      </div>
+    </div>
+  </div>
+
+  {% block sidebar_nav %}{% endblock %}
+
+  <div class="sidebar-footer">
+    <div class="user-card">
+      <div class="user-avatar">{{ session.user_id[:2].upper() }}</div>
+      <div>
+        <div class="user-name">{{ session.user_id }}</div>
+        <div class="user-role">{{ session.role | capitalize }}</div>
+      </div>
+    </div>
+    <a href="/logout" class="logout-btn">
+      <svg fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+        <path stroke-linecap="round" stroke-linejoin="round" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"/>
+      </svg>
+      Logout
+    </a>
+  </div>
+</aside>
+
+<!-- MAIN -->
+<main class="main">
+  <div class="topbar">
+    <div class="topbar-left">
+      <span class="page-icon">{% block page_icon %}📊{% endblock %}</span>
+      <span class="page-title">{% block page_title %}Dashboard{% endblock %}</span>
+    </div>
+    <div class="topbar-right">
+      {% block topbar_extra %}{% endblock %}
+      <!-- Notification Bell -->
+      <div style="position:relative" id="notifWrap">
+        <button onclick="toggleNotifs()" id="bellBtn"
+          style="background:var(--surface2);border:1px solid var(--border);
+          border-radius:8px;padding:6px 10px;cursor:pointer;color:var(--text-muted);
+          font-size:16px;display:flex;align-items:center;gap:6px;transition:all .15s">
+          🔔
+          <span id="notifBadge" style="display:none;background:#EF4444;color:#fff;
+            font-size:10px;font-weight:700;padding:1px 5px;border-radius:10px;
+            min-width:16px;text-align:center">0</span>
+        </button>
+        <div id="notifDropdown" style="display:none;position:absolute;right:0;top:42px;
+          width:320px;background:var(--surface);border:1px solid var(--border);
+          border-radius:12px;box-shadow:0 8px 32px rgba(0,0,0,0.4);z-index:200;overflow:hidden">
+          <div style="padding:12px 16px;border-bottom:1px solid var(--border);
+               display:flex;justify-content:space-between;align-items:center">
+            <span style="font-size:13px;font-weight:700">Notifications</span>
+            <button onclick="loadNotifs()" style="background:none;border:none;
+              color:var(--primary);font-size:11px;cursor:pointer;font-family:inherit">
+              Mark all read
+            </button>
+          </div>
+          <div id="notifList" style="max-height:320px;overflow-y:auto;padding:8px">
+            <div style="text-align:center;padding:20px;color:var(--text-dim);font-size:13px">
+              Loading...
+            </div>
+          </div>
+        </div>
+      </div>
+      <span class="topbar-date" id="live-date"></span>
+    </div>
+  </div>
+
+  <div class="content">
+    {% with messages = get_flashed_messages(with_categories=true) %}
+      {% for category, message in messages %}
+        <div class="alert alert-{{ 'error' if category == 'error' else category }}">{{ message }}</div>
+      {% endfor %}
+    {% endwith %}
+    {% block content %}{% endblock %}
+  </div>
+</main>
+
+<script>
+function updateDate(){
+  const d = new Date();
+  document.getElementById('live-date').textContent =
+    d.toLocaleDateString('en-IN',{weekday:'short',day:'numeric',month:'short',year:'numeric'}) +
+    '  ' + d.toLocaleTimeString('en-IN',{hour:'2-digit',minute:'2-digit'});
+}
+updateDate(); setInterval(updateDate, 60000);
+
+// Notifications
+function checkUnread() {
+  fetch('/notifications/unread')
+    .then(r => r.json())
+    .then(data => {
+      var badge = document.getElementById('notifBadge');
+      if (data.count > 0) {
+        badge.textContent = data.count;
+        badge.style.display = 'inline-block';
+      } else {
+        badge.style.display = 'none';
+      }
+    }).catch(()=>{});
+}
+
+function loadNotifs() {
+  var list = document.getElementById('notifList');
+  list.innerHTML = '<div style="text-align:center;padding:20px;color:var(--text-dim);font-size:13px">Loading...</div>';
+  fetch('/notifications/list')
+    .then(r => r.json())
+    .then(data => {
+      document.getElementById('notifBadge').style.display = 'none';
+      if (!data.notifications || data.notifications.length === 0) {
+        list.innerHTML = '<div style="text-align:center;padding:20px;color:var(--text-dim);font-size:13px">No notifications yet</div>';
+        return;
+      }
+      var colors = {success:'#10B981', danger:'#EF4444', warning:'#F59E0B', info:'#6366F1'};
+      list.innerHTML = data.notifications.map(n => {
+        var c = colors[n.type] || '#6366F1';
+        var time = n.created_at ? n.created_at.substring(0,16).replace('T',' ') : '';
+        return `<div style="padding:10px 12px;border-left:3px solid ${c};
+          border-radius:6px;margin-bottom:6px;background:var(--bg)">
+          <div style="font-size:13px;font-weight:600;color:var(--text)">${n.title}</div>
+          <div style="font-size:12px;color:var(--text-muted);margin-top:2px">${n.message}</div>
+          <div style="font-size:10px;color:var(--text-dim);margin-top:4px">${time}</div>
+        </div>`;
+      }).join('');
+    }).catch(()=>{
+      list.innerHTML = '<div style="text-align:center;padding:20px;color:var(--text-dim);font-size:13px">Could not load notifications</div>';
+    });
+}
+
+function toggleNotifs() {
+  var d = document.getElementById('notifDropdown');
+  if (d.style.display === 'none') {
+    d.style.display = 'block';
+    loadNotifs();
+  } else {
+    d.style.display = 'none';
+  }
+}
+
+// Close dropdown on outside click
+document.addEventListener('click', function(e) {
+  var wrap = document.getElementById('notifWrap');
+  if (wrap && !wrap.contains(e.target)) {
+    document.getElementById('notifDropdown').style.display = 'none';
+  }
+});
+
+// Check unread every 30 seconds
+checkUnread();
+setInterval(checkUnread, 30000);
+</script>
+{% block scripts %}{% endblock %}
+</body>
+</html>

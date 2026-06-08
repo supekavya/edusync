@@ -1,0 +1,71 @@
+{% extends "admin/base_admin.html" %}
+{% set active = "attendance" %}
+{% block page_icon %}📅{% endblock %}
+{% block page_title %}Attendance Records{% endblock %}
+
+{% block content %}
+<div class="metrics-grid mb-6">
+  <div class="metric-card blue"><div class="metric-icon blue">👥</div>
+    <div class="metric-value">{{ summary.total_teachers }}</div><div class="metric-label">Total Teachers</div></div>
+  <div class="metric-card green"><div class="metric-icon green">✅</div>
+    <div class="metric-value">{{ summary.present }}</div><div class="metric-label">Present Today</div></div>
+  <div class="metric-card red"><div class="metric-icon red">❌</div>
+    <div class="metric-value">{{ summary.absent }}</div><div class="metric-label">Absent Today</div></div>
+  <div class="metric-card amber"><div class="metric-icon amber">📊</div>
+    <div class="metric-value">{{ summary.attendance_rate }}%</div><div class="metric-label">Attendance Rate</div></div>
+</div>
+
+<!-- Filters -->
+<div class="card mb-4">
+  <form method="GET" class="flex gap-3 items-center" style="flex-wrap:wrap">
+    <div class="form-group" style="margin:0;flex:1;min-width:140px">
+      <label class="form-label">Department</label>
+      <select name="dept" class="form-control">
+        {% for d in depts %}<option value="{{ d }}" {{ 'selected' if d==dept_f }}>{{ d }}</option>{% endfor %}
+      </select>
+    </div>
+    <div class="form-group" style="margin:0;flex:1;min-width:120px">
+      <label class="form-label">Status</label>
+      <select name="status" class="form-control">
+        {% for s in ['All','Present','Absent'] %}<option {{ 'selected' if s==status_f }}>{{ s }}</option>{% endfor %}
+      </select>
+    </div>
+    <div class="form-group" style="margin:0;flex:1;min-width:140px">
+      <label class="form-label">Date (YYYY-MM-DD)</label>
+      <input type="text" name="date" class="form-control" value="{{ date_f }}" placeholder="All dates">
+    </div>
+    <div style="padding-top:20px">
+      <button type="submit" class="btn btn-primary">Filter</button>
+    </div>
+  </form>
+</div>
+
+<div class="card">
+  <div class="card-header">
+    <div class="card-title">Records</div>
+    <div style="display:flex;align-items:center;gap:12px">
+      <span style="font-size:12px;color:var(--text-muted)">Showing {{ filtered }} of {{ total }}</span>
+      <a href="/admin/attendance/export?dept={{ dept_f }}&status={{ status_f }}&date={{ date_f }}"
+         class="btn btn-secondary btn-sm">📥 Export CSV</a>
+    </div>
+  </div>
+  <div class="table-wrap">
+    <table>
+      <thead><tr><th>Name</th><th>Department</th><th>Date</th><th>Status</th><th>Check-in</th></tr></thead>
+      <tbody>
+        {% for r in records %}
+        <tr>
+          <td style="font-weight:500">{{ r.name }}</td>
+          <td><span class="badge badge-info">{{ r.department }}</span></td>
+          <td style="color:var(--text-muted)">{{ r.date }}</td>
+          <td><span class="badge {{ 'badge-success' if r.status=='Present' else 'badge-danger' }}">{{ r.status }}</span></td>
+          <td style="color:var(--text-muted)">{{ r.checkin_time or '—' }}</td>
+        </tr>
+        {% else %}
+        <tr><td colspan="5" style="text-align:center;padding:32px;color:var(--text-dim)">No records found</td></tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</div>
+{% endblock %}

@@ -1,0 +1,197 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>EDUSYNC — Submit Feedback</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+:root{--bg:#0F172A;--surface:#1E293B;--surface2:#263348;--border:#334155;
+  --primary:#6366F1;--text:#F1F5F9;--muted:#94A3B8;--dim:#64748B}
+body{font-family:'Inter',sans-serif;background:var(--bg);color:var(--text);min-height:100vh}
+body::before{content:'';position:fixed;inset:0;
+  background-image:linear-gradient(rgba(99,102,241,0.02) 1px,transparent 1px),
+  linear-gradient(90deg,rgba(99,102,241,0.02) 1px,transparent 1px);
+  background-size:40px 40px;pointer-events:none}
+
+/* Topbar */
+.topbar{background:var(--surface);border-bottom:1px solid var(--border);
+  padding:14px 24px;display:flex;align-items:center;justify-content:space-between;
+  position:sticky;top:0;z-index:50}
+.topbar-brand{display:flex;align-items:center;gap:10px}
+.topbar-icon{width:32px;height:32px;border-radius:8px;
+  background:linear-gradient(135deg,#6366F1,#4F46E5);
+  display:flex;align-items:center;justify-content:center;font-size:16px}
+.topbar-name{font-size:15px;font-weight:700}
+.topbar-sub{font-size:11px;color:var(--muted)}
+.student-pill{display:flex;align-items:center;gap:8px;
+  background:var(--surface2);border:1px solid var(--border);
+  border-radius:20px;padding:5px 14px}
+.student-avatar{width:26px;height:26px;border-radius:50%;
+  background:linear-gradient(135deg,#10B981,#059669);
+  display:flex;align-items:center;justify-content:center;
+  font-size:11px;font-weight:700;color:#fff}
+.student-info{font-size:12px}
+.student-info strong{color:var(--text);font-weight:600}
+.student-info span{color:var(--muted)}
+.logout-link{font-size:12px;color:#F87171;text-decoration:none;margin-left:8px}
+
+/* Content */
+.content{max-width:680px;margin:0 auto;padding:28px 20px}
+
+/* Alert */
+.alert{padding:12px 16px;border-radius:10px;font-size:13px;margin-bottom:20px;border-left:4px solid}
+.alert-success{background:rgba(16,185,129,0.1);border-color:#10B981;color:#6EE7B7}
+.alert-error{background:rgba(239,68,68,0.1);border-color:#EF4444;color:#FCA5A5}
+
+/* Form card */
+.form-card{background:var(--surface);border:1px solid var(--border);
+  border-radius:16px;padding:28px;margin-bottom:24px}
+.form-title{font-size:18px;font-weight:700;margin-bottom:6px}
+.form-sub{font-size:13px;color:var(--muted);margin-bottom:24px}
+.form-group{margin-bottom:18px}
+.form-label{display:block;font-size:11px;font-weight:700;color:var(--muted);
+  text-transform:uppercase;letter-spacing:.07em;margin-bottom:8px}
+.form-control{width:100%;background:var(--bg);border:1.5px solid var(--border);
+  border-radius:8px;padding:10px 14px;color:var(--text);
+  font-size:14px;font-family:'Inter',sans-serif;transition:border-color .15s}
+.form-control:focus{outline:none;border-color:#6366F1;box-shadow:0 0 0 3px rgba(99,102,241,0.15)}
+select.form-control option{background:var(--surface)}
+textarea.form-control{resize:vertical;min-height:120px;line-height:1.6}
+
+/* Char counter */
+.char-row{display:flex;justify-content:space-between;align-items:center;margin-top:4px}
+.char-count{font-size:11px;color:var(--dim)}
+
+/* Rating */
+.rating-row{display:flex;gap:8px;margin-bottom:4px}
+.rating-btn{padding:7px 16px;border-radius:8px;border:1.5px solid var(--border);
+  background:transparent;color:var(--muted);font-size:13px;font-weight:500;
+  cursor:pointer;transition:all .15s;font-family:'Inter',sans-serif}
+.rating-btn:hover{border-color:#6366F1;color:#818CF8;background:rgba(99,102,241,0.08)}
+.rating-btn.selected-pos{background:rgba(16,185,129,0.15);border-color:#10B981;color:#34D399}
+.rating-btn.selected-neu{background:rgba(245,158,11,0.15);border-color:#F59E0B;color:#FBBF24}
+.rating-btn.selected-neg{background:rgba(239,68,68,0.15);border-color:#EF4444;color:#F87171}
+
+/* Submit */
+.btn-submit{width:100%;padding:12px;border:none;border-radius:10px;
+  background:linear-gradient(135deg,#6366F1,#4F46E5);color:#fff;
+  font-size:15px;font-weight:700;cursor:pointer;font-family:'Inter',sans-serif;
+  box-shadow:0 2px 12px rgba(99,102,241,0.35);transition:all .18s}
+.btn-submit:hover{box-shadow:0 4px 20px rgba(99,102,241,0.55);transform:translateY(-1px)}
+.btn-submit:disabled{opacity:.6;cursor:not-allowed;transform:none}
+
+/* Tips */
+.tips{background:rgba(99,102,241,0.06);border:1px solid rgba(99,102,241,0.15);
+  border-radius:12px;padding:16px 20px;margin-top:20px}
+.tips-title{font-size:12px;font-weight:700;color:#818CF8;text-transform:uppercase;
+  letter-spacing:.07em;margin-bottom:8px}
+.tips ul{list-style:none;display:flex;flex-direction:column;gap:6px}
+.tips li{font-size:12px;color:var(--muted);display:flex;align-items:flex-start;gap:6px}
+.tips li::before{content:'→';color:#6366F1;flex-shrink:0}
+</style>
+</head>
+<body>
+
+<div class="topbar">
+  <div class="topbar-brand">
+    <div class="topbar-icon">💬</div>
+    <div>
+      <div class="topbar-name">Student Feedback</div>
+      <div class="topbar-sub">CVR College of Engineering</div>
+    </div>
+  </div>
+  <div class="student-pill">
+    <div class="student-avatar">{{ student_name[0].upper() }}</div>
+    <div class="student-info">
+      <strong>{{ student_name }}</strong>
+      <span> · {{ student_roll }}</span>
+    </div>
+    <a href="/student/logout" class="logout-link">Sign out</a>
+  </div>
+</div>
+
+<div class="content">
+  {% with messages = get_flashed_messages(with_categories=true) %}
+    {% for category, message in messages %}
+    <div class="alert alert-{{ category }}">{{ message }}</div>
+    {% endfor %}
+  {% endwith %}
+
+  <div class="form-card">
+    <div class="form-title">Share your feedback</div>
+    <div class="form-sub">Your feedback helps improve teaching quality. All responses are anonymous to teachers.</div>
+
+    <form method="POST" id="feedbackForm">
+      <div class="form-group">
+        <label class="form-label">Select Teacher</label>
+        <select name="teacher_id" class="form-control" required id="teacherSelect"
+                onchange="updateTeacherInfo(this)">
+          <option value="">— Choose a teacher —</option>
+          {% for t in teachers %}
+          <option value="{{ t.teacher_id }}"
+                  data-dept="{{ t.department }}"
+                  data-subject="{{ t.subject or 'N/A' }}">
+            {{ t.name }} — {{ t.department }}
+          </option>
+          {% endfor %}
+        </select>
+        <div id="teacherInfo" style="margin-top:8px;font-size:12px;color:var(--muted);display:none">
+          Subject: <span id="teacherSubject"></span>
+        </div>
+      </div>
+
+      <div class="form-group">
+        <label class="form-label">Your Feedback</label>
+        <textarea name="feedback_text" class="form-control" id="feedbackText"
+                  placeholder="Share your experience with this teacher — teaching style, clarity, helpfulness, etc."
+                  oninput="updateCount(this)" required></textarea>
+        <div class="char-row">
+          <span class="char-count" id="charCount">0 characters</span>
+          <span class="char-count">Minimum 10 characters</span>
+        </div>
+      </div>
+
+      <button type="submit" class="btn-submit" id="submitBtn">
+        Submit Feedback →
+      </button>
+    </form>
+  </div>
+
+  <div class="tips">
+    <div class="tips-title">Tips for good feedback</div>
+    <ul>
+      <li>Be specific — mention what helped you learn better</li>
+      <li>Be constructive — suggest improvements if needed</li>
+      <li>Be honest — your feedback is confidential</li>
+      <li>You can submit feedback for multiple teachers</li>
+    </ul>
+  </div>
+</div>
+
+<script>
+function updateCount(el) {
+  var len = el.value.length;
+  document.getElementById('charCount').textContent = len + ' character' + (len===1?'':'s');
+}
+
+function updateTeacherInfo(sel) {
+  var opt = sel.options[sel.selectedIndex];
+  var info = document.getElementById('teacherInfo');
+  if (opt.value) {
+    document.getElementById('teacherSubject').textContent = opt.dataset.subject;
+    info.style.display = 'block';
+  } else {
+    info.style.display = 'none';
+  }
+}
+
+document.getElementById('feedbackForm').addEventListener('submit', function(e) {
+  var btn = document.getElementById('submitBtn');
+  btn.disabled = true;
+  btn.textContent = 'Submitting...';
+});
+</script>
+</body>
+</html>

@@ -1,0 +1,161 @@
+{% extends "teacher/base_teacher.html" %}
+{% set active = "home" %}
+{% block page_icon %}🏠{% endblock %}
+{% block page_title %}{{ greeting }}, {{ teacher.name.split()[0] }}{% endblock %}
+
+{% block content %}
+<div class="metrics-grid">
+  <div class="metric-card {{ 'green' if stats.attendance_percent >= 90 else 'amber' }}">
+    <div class="metric-icon {{ 'green' if stats.attendance_percent >= 90 else 'amber' }}">📅</div>
+    <div class="metric-value">{{ stats.attendance_percent }}%</div>
+    <div class="metric-label">Attendance Rate</div>
+    <div class="metric-delta {{ 'up' if stats.attendance_percent >= 90 else 'down' }}">
+      {{ '↑ Above threshold' if stats.attendance_percent >= 90 else '↓ Below 90%' }}
+    </div>
+  </div>
+  <div class="metric-card blue">
+    <div class="metric-icon blue">✅</div>
+    <div class="metric-value">{{ stats.present_days }}</div>
+    <div class="metric-label">Days Present</div>
+    <div class="metric-delta neutral">→ of {{ stats.total_days }} recorded</div>
+  </div>
+  <div class="metric-card teal">
+    <div class="metric-icon teal">🏖️</div>
+    <div class="metric-value">{{ avail }}</div>
+    <div class="metric-label">Leave Days Left</div>
+    <div class="metric-delta neutral">→ This semester</div>
+  </div>
+  <div class="metric-card purple">
+    <div class="metric-icon purple">💬</div>
+    <div class="metric-value">{{ feedback_count }}</div>
+    <div class="metric-label">Feedback Received</div>
+    <div class="metric-delta neutral">→ From students</div>
+  </div>
+</div>
+
+<div class="grid-2" style="gap:20px">
+  <!-- Today's Attendance -->
+  <div class="card">
+    <div class="card-header">
+      <div class="card-title">📍 Today's Attendance</div>
+      <span style="font-size:12px;color:var(--text-dim)">{{ today }}</span>
+    </div>
+    {% if existing %}
+      <div class="alert alert-success">
+        ✅ Marked <strong>{{ today_record.status }}</strong> at {{ today_record.checkin_time }}
+      </div>
+    {% else %}
+      <div class="alert alert-warning" style="margin-bottom:16px">
+        ⏳ You haven't marked attendance yet today.
+      </div>
+      <div id="att-status" style="display:none" class="alert alert-info">📍 Getting your location...</div>
+      <button id="markBtn" type="button" class="btn btn-primary w-full" onclick="markAttendance(this)">
+        📍 Mark Present Now
+      </button>
+    {% endif %}
+  </div>
+
+  <!-- Pending Leaves -->
+  <div class="card">
+    <div class="card-header">
+      <div class="card-title">📋 Pending Leave Requests</div>
+      <a href="/teacher/leave" class="btn btn-secondary btn-sm">View all →</a>
+    </div>
+    {% if pending_leaves %}
+      {% for req in pending_leaves %}
+      <div style="padding:10px 12px;background:var(--bg);border-radius:8px;
+           border-left:3px solid #F59E0B;margin-bottom:8px">
+        <div style="font-size:13px;font-weight:600">{{ req.leave_type }}</div>
+        <div style="font-size:12px;color:var(--text-muted)">
+          {{ req.from_date }} → {{ req.to_date }} · {{ req.days_requested }} day(s)
+        </div>
+      </div>
+      {% endfor %}
+    {% else %}
+      <div style="text-align:center;padding:20px;color:var(--text-dim);font-size:13px">
+        No pending leave requests
+      </div>
+    {% endif %}
+  </div>
+</div>
+
+<!-- Recent Attendance -->
+{% if recent %}
+<div class="card mt-4">
+  <div class="card-header">
+    <div class="card-title">📊 Last 14 Days</div>
+  </div>
+  <div style="display:flex;gap:6px;flex-wrap:wrap">
+    {% for r in recent %}
+    <div style="flex:1;min-width:36px;text-align:center">
+      <div style="height:40px;border-radius:6px;display:flex;align-items:center;
+           justify-content:center;font-size:10px;font-weight:700;
+           background:{{ '#10B981' if r.status=='Present' else '#EF4444' }};
+           color:#fff;margin-bottom:4px">
+        {{ 'P' if r.status=='Present' else 'A' }}
+      </div>
+      <div style="font-size:9px;color:var(--text-dim)">{{ r.date[-5:] }}</div>
+    </div>
+    {% endfor %}
+  </div>
+</div>
+{% endif %}
+
+<!-- Announcements -->
+{% if announcements %}
+<div class="card mt-4">
+  <div class="card-header">
+    <div class="card-title">📢 Announcements</div>
+  </div>
+  {% for ann in announcements %}
+  <div style="padding:12px 0;border-bottom:1px solid rgba(51,65,85,0.4)">
+    <div style="font-size:14px;font-weight:600;margin-bottom:4px">{{ ann.title }}</div>
+    <div style="font-size:13px;color:var(--text-muted);margin-bottom:6px">{{ ann.body }}</div>
+    <div style="font-size:11px;color:var(--text-dim)">{{ ann.created_at[:10] }}</div>
+  </div>
+  {% endfor %}
+</div>
+{% endif %}
+{% endblock %}
+
+{% block scripts %}
+<script>
+function markAttendance(btn) {
+  var s = document.getElementById('att-status');
+  btn.disabled = true; btn.textContent = '📍 Getting location...';
+  s.style.display = 'block'; s.className = 'alert alert-info';
+  s.textContent = '📍 Requesting location access...';
+  if (!navigator.geolocation) {
+    s.className='alert alert-error'; s.textContent='❌ Geolocation not supported by your browser.';
+    btn.disabled=false; btn.textContent='📍 Mark Present Now'; return;
+  }
+  navigator.geolocation.getCurrentPosition(function(pos) {
+    s.textContent = '📍 Location obtained. Submitting...';
+    fetch('/teacher/attendance/mark', {
+      method:'POST',
+      headers:{'Content-Type':'application/json','X-Requested-With':'XMLHttpRequest'},
+      body: JSON.stringify({latitude:pos.coords.latitude, longitude:pos.coords.longitude})
+    })
+    .then(r=>r.json())
+    .then(data=>{
+      if(data.ok){
+        s.className='alert alert-success'; s.textContent='✅ '+data.msg;
+        setTimeout(()=>location.reload(),1500);
+      } else {
+        s.className='alert alert-error'; s.textContent='❌ '+data.msg;
+        btn.disabled=false; btn.textContent='📍 Mark Present Now';
+      }
+    })
+    .catch(()=>{
+      s.className='alert alert-error'; s.textContent='❌ Network error. Try again.';
+      btn.disabled=false; btn.textContent='📍 Mark Present Now';
+    });
+  }, function(err){
+    s.className='alert alert-error';
+    s.textContent = err.code===1 ? '❌ Location access denied. Please allow location access.' :
+                    err.code===2 ? '❌ Location unavailable. Try again.' : '❌ Request timed out.';
+    btn.disabled=false; btn.textContent='📍 Mark Present Now';
+  }, {timeout:15000, enableHighAccuracy:true});
+}
+</script>
+{% endblock %}

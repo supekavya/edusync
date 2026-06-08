@@ -1,0 +1,76 @@
+{% extends "admin/base_admin.html" %}
+{% set active = "feedback" %}
+{% block page_icon %}🗣️{% endblock %}
+{% block page_title %}Feedback & Sentiment{% endblock %}
+
+{% block content %}
+<div class="metrics-grid mb-6">
+  <div class="metric-card blue"><div class="metric-icon blue">💬</div>
+    <div class="metric-value">{{ total }}</div><div class="metric-label">Total Feedback</div></div>
+  <div class="metric-card green"><div class="metric-icon green">🟢</div>
+    <div class="metric-value">{{ pos }}</div><div class="metric-label">Appreciative</div></div>
+  <div class="metric-card amber"><div class="metric-icon amber">🟡</div>
+    <div class="metric-value">{{ neu }}</div><div class="metric-label">Neutral</div></div>
+  <div class="metric-card purple"><div class="metric-icon purple">🟠</div>
+    <div class="metric-value">{{ neg }}</div><div class="metric-label">Mixed</div></div>
+</div>
+
+<!-- Filters -->
+<div class="card mb-4">
+  <form method="GET" class="flex gap-3 items-center" style="flex-wrap:wrap">
+    <div class="form-group" style="margin:0;flex:1;min-width:160px">
+      <label class="form-label">Department</label>
+      <select name="dept" class="form-control">
+        <option value="">All Departments</option>
+        {% for d in depts %}{% if d %}<option value="{{ d }}" {{ 'selected' if d==dept_f }}>{{ d }}</option>{% endif %}{% endfor %}
+      </select>
+    </div>
+    <div class="form-group" style="margin:0;flex:1;min-width:160px">
+      <label class="form-label">Tone</label>
+      <select name="tone" class="form-control">
+        {% for t in ['','Appreciative','Neutral','Mixed'] %}
+        <option value="{{ t }}" {{ 'selected' if t==tone_f }}>{{ t or 'All Tones' }}</option>
+        {% endfor %}
+      </select>
+    </div>
+    <div style="padding-top:20px"><button type="submit" class="btn btn-primary">Filter</button></div>
+  </form>
+</div>
+
+<div class="card">
+  <div class="card-header">
+    <div class="card-title">Feedback entries</div>
+    <span style="font-size:12px;color:var(--text-muted)">{{ feedback | length }} shown</span>
+  </div>
+  <div style="display:flex;flex-direction:column;gap:8px">
+    {% for fb in feedback %}
+    {% set score = fb.sentiment_score | float %}
+    {% set color = '#10B981' if score > 0.2 else '#F59E0B' if score >= -0.2 else '#EF4444' %}
+    {% set tone  = 'Appreciative' if score > 0.2 else 'Neutral' if score >= -0.2 else 'Mixed' %}
+    <div style="padding:12px 16px;background:var(--bg);border-radius:10px;border-left:4px solid {{ color }}">
+      <div class="flex justify-between items-center">
+        <div>
+          <span style="font-weight:600">{{ fb.teacher_name }}</span>
+          <span style="font-size:12px;color:var(--text-muted)"> — {{ fb.department }}</span>
+        </div>
+        <div class="flex gap-2 items-center">
+          <span class="badge {{ 'badge-success' if tone=='Appreciative' else 'badge-warning' if tone=='Neutral' else 'badge-neutral' }}">
+            {{ tone }}
+          </span>
+          <form method="POST" action="/admin/feedback/delete/{{ fb.id }}"
+                onsubmit="return confirm('Delete this feedback entry?')">
+            <button class="btn btn-danger btn-sm">Delete</button>
+          </form>
+        </div>
+      </div>
+      <div style="font-size:13px;margin-top:6px;color:var(--text)">"{{ fb.feedback_text }}"</div>
+      <div style="font-size:11px;color:var(--text-dim);margin-top:4px">
+        👤 {{ fb.student_name or 'Anonymous' }} · {{ fb.created_at[:10] }}
+      </div>
+    </div>
+    {% else %}
+    <div style="text-align:center;padding:32px;color:var(--text-dim)">No feedback found</div>
+    {% endfor %}
+  </div>
+</div>
+{% endblock %}

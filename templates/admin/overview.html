@@ -1,0 +1,137 @@
+{% extends "admin/base_admin.html" %}
+{% set active = "overview" %}
+{% block page_icon %}📊{% endblock %}
+{% block page_title %}Dashboard Overview{% endblock %}
+{% block topbar_extra %}<span class="topbar-badge">{{ semester }}</span>{% endblock %}
+
+{% block content %}
+<div class="section-label">Today's attendance</div>
+<div class="metrics-grid">
+  <div class="metric-card blue">
+    <div class="metric-icon blue">👥</div>
+    <div class="metric-value">{{ att.total_teachers }}</div>
+    <div class="metric-label">Total Teachers</div>
+    <div class="metric-delta neutral">→ Active staff</div>
+  </div>
+  <div class="metric-card green">
+    <div class="metric-icon green">✅</div>
+    <div class="metric-value">{{ att.present }}</div>
+    <div class="metric-label">Present Today</div>
+    <div class="metric-delta {{ 'up' if att.attendance_rate >= 90 else 'down' }}">
+      {{ '↑' if att.attendance_rate >= 90 else '↓' }} {{ att.attendance_rate }}% rate
+    </div>
+  </div>
+  <div class="metric-card amber">
+    <div class="metric-icon amber">⚠️</div>
+    <div class="metric-value">{{ att.absent }}</div>
+    <div class="metric-label">Absent Today</div>
+    <div class="metric-delta {{ 'down' if att.absent > 0 else 'up' }}">
+      {{ '↓ Needs follow-up' if att.absent > 0 else '✓ All present' }}
+    </div>
+  </div>
+  <div class="metric-card red">
+    <div class="metric-icon red">🕐</div>
+    <div class="metric-value">{{ att.total_teachers - att.marked }}</div>
+    <div class="metric-label">Not Marked Yet</div>
+    <div class="metric-delta neutral">→ Pending</div>
+  </div>
+</div>
+
+<div class="section-label">Leaves & feedback</div>
+<div class="metrics-grid">
+  <div class="metric-card amber">
+    <div class="metric-icon amber">📋</div>
+    <div class="metric-value">{{ lv.pending }}</div>
+    <div class="metric-label">Pending Leaves</div>
+    <div class="metric-delta {{ 'down' if lv.pending > 0 else 'up' }}">
+      {{ '↓ Awaiting review' if lv.pending > 0 else '✓ None pending' }}
+    </div>
+  </div>
+  <div class="metric-card green">
+    <div class="metric-icon green">✅</div>
+    <div class="metric-value">{{ lv.approved }}</div>
+    <div class="metric-label">Approved Leaves</div>
+    <div class="metric-delta up">↑ This semester</div>
+  </div>
+  <div class="metric-card blue">
+    <div class="metric-icon blue">💬</div>
+    <div class="metric-value">{{ total_feedback }}</div>
+    <div class="metric-label">Total Feedback</div>
+    <div class="metric-delta up">↑ {{ pos_feedback }} appreciative</div>
+  </div>
+  <div class="metric-card purple">
+    <div class="metric-icon purple">🟡</div>
+    <div class="metric-value">{{ neg_feedback }}</div>
+    <div class="metric-label">Mixed Feedback</div>
+    <div class="metric-delta neutral">→ Review recommended</div>
+  </div>
+</div>
+
+<hr class="divider">
+
+<div class="grid-2" style="gap:20px">
+  <!-- Department Attendance Chart -->
+  <div class="card">
+    <div class="card-header">
+      <div>
+        <div class="card-title">Department attendance</div>
+        <div class="card-subtitle">Average % across all records</div>
+      </div>
+    </div>
+    <div class="chart-container" style="height:260px">
+      <canvas id="deptChart"></canvas>
+    </div>
+  </div>
+
+  <!-- Department table -->
+  <div class="card">
+    <div class="card-header">
+      <div class="card-title">Department breakdown</div>
+      <a href="/admin/attendance" class="btn btn-secondary btn-sm">View all →</a>
+    </div>
+    <div style="display:flex;flex-direction:column;gap:8px">
+      {% for d in dept_stats %}
+      {% set pct = d.avg_attendance | float %}
+      {% set color = '#10B981' if pct >= 90 else '#F59E0B' if pct >= 80 else '#EF4444' %}
+      <div style="display:flex;align-items:center;gap:10px">
+        <div style="font-size:12px;font-weight:500;color:var(--text-muted);width:130px;
+             white-space:nowrap;overflow:hidden;text-overflow:ellipsis">{{ d.department }}</div>
+        <div style="flex:1;background:var(--border);border-radius:20px;height:6px;overflow:hidden">
+          <div style="width:{{ pct }}%;background:{{ color }};height:100%;border-radius:20px;transition:width .5s"></div>
+        </div>
+        <div style="font-size:12px;font-weight:700;color:{{ color }};width:38px;text-align:right">{{ '%.1f' % pct }}%</div>
+      </div>
+      {% endfor %}
+    </div>
+  </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+const ctx = document.getElementById('deptChart').getContext('2d');
+new Chart(ctx, {
+  type: 'bar',
+  data: {
+    labels: {{ dept_labels | tojson }},
+    datasets:[{
+      data: {{ dept_values | tojson }},
+      backgroundColor: {{ dept_values | tojson }}.map(v =>
+        v >= 90 ? 'rgba(16,185,129,0.7)' : v >= 80 ? 'rgba(245,158,11,0.7)' : 'rgba(239,68,68,0.7)'
+      ),
+      borderRadius: 6, borderSkipped: false,
+    }]
+  },
+  options:{
+    responsive:true, maintainAspectRatio:false,
+    plugins:{legend:{display:false},
+      tooltip:{callbacks:{label:ctx=>`${ctx.parsed.y.toFixed(1)}%`}}},
+    scales:{
+      x:{grid:{color:'rgba(51,65,85,0.5)'},ticks:{color:'#94A3B8',font:{size:10},maxRotation:30}},
+      y:{grid:{color:'rgba(51,65,85,0.5)'},ticks:{color:'#94A3B8',font:{size:10},callback:v=>v+'%'},
+        min:70, max:100}
+    }
+  }
+});
+</script>
+{% endblock %}

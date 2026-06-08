@@ -1,0 +1,83 @@
+{% extends "admin/base_admin.html" %}
+{% set active = "leave" %}
+{% block page_icon %}📋{% endblock %}
+{% block page_title %}Leave Requests{% endblock %}
+
+{% block content %}
+<div class="metrics-grid mb-6">
+  <div class="metric-card blue"><div class="metric-icon blue">📋</div>
+    <div class="metric-value">{{ summary.total }}</div><div class="metric-label">Total Requests</div></div>
+  <div class="metric-card amber"><div class="metric-icon amber">⏳</div>
+    <div class="metric-value">{{ summary.pending }}</div><div class="metric-label">Pending</div></div>
+  <div class="metric-card green"><div class="metric-icon green">✅</div>
+    <div class="metric-value">{{ summary.approved }}</div><div class="metric-label">Approved</div></div>
+  <div class="metric-card red"><div class="metric-icon red">❌</div>
+    <div class="metric-value">{{ summary.rejected }}</div><div class="metric-label">Rejected</div></div>
+</div>
+
+<!-- Pending approvals -->
+{% if pending %}
+<div class="section-label">Pending approval</div>
+{% for req in pending %}
+<div style="background:var(--surface);border:1px solid var(--border);border-radius:12px;
+     padding:16px 20px;margin-bottom:10px;border-left:4px solid #F59E0B">
+  <div class="flex justify-between items-center">
+    <div>
+      <div style="font-weight:600;font-size:15px">{{ req.teacher_name }}
+        <span style="font-size:12px;color:var(--text-muted);font-weight:400"> — {{ req.department }}</span>
+      </div>
+      <div style="font-size:13px;color:var(--text-muted);margin-top:3px">
+        🗂 {{ req.leave_type }} · 📅 {{ req.from_date }} → {{ req.to_date }} · {{ req.days_requested }} day(s)
+      </div>
+      <div style="font-size:13px;margin-top:4px">{{ req.reason }}</div>
+    </div>
+  </div>
+  <form method="POST" action="/admin/leave/{{ req.id }}/action" class="flex gap-2 mt-3 items-center">
+    <input type="text" name="note" class="form-control" placeholder="Admin note (optional)" style="flex:1;margin:0">
+    <button name="action" value="Approved" class="btn btn-primary btn-sm">✅ Approve</button>
+    <button name="action" value="Rejected" class="btn btn-danger btn-sm">❌ Reject</button>
+  </form>
+</div>
+{% endfor %}
+{% else %}
+<div class="alert alert-success mb-4">🎉 No pending leave requests.</div>
+{% endif %}
+
+<hr class="divider">
+
+<!-- All requests -->
+<div class="flex justify-between items-center mb-3">
+  <div class="section-label">All requests</div>
+  <form method="GET" class="flex gap-2">
+    {% for s in ['All','Pending','Approved','Rejected','Cancelled'] %}
+    <button name="filter" value="{{ s }}" class="btn btn-sm {{ 'btn-primary' if status_filter==s else 'btn-secondary' }}">{{ s }}</button>
+    {% endfor %}
+  </form>
+</div>
+
+<div class="card">
+  <div class="table-wrap">
+    <table>
+      <thead><tr><th>Teacher</th><th>Type</th><th>Dates</th><th>Days</th><th>Status</th><th>Applied</th></tr></thead>
+      <tbody>
+        {% for r in all_req %}
+        <tr>
+          <td style="font-weight:500">{{ r.teacher_name }}</td>
+          <td style="color:var(--text-muted)">{{ r.leave_type }}</td>
+          <td style="color:var(--text-muted)">{{ r.from_date }} → {{ r.to_date }}</td>
+          <td>{{ r.days_requested }}</td>
+          <td>
+            <span class="badge {{ 'badge-success' if r.status=='Approved' else 'badge-danger' if r.status=='Rejected' else 'badge-warning' if r.status=='Pending' else 'badge-neutral' }}">
+              {{ r.status }}
+            </span>
+          </td>
+          <td style="color:var(--text-dim);font-size:12px">{{ r.applied_at[:10] }}</td>
+        </tr>
+        {% else %}
+        <tr><td colspan="6" style="text-align:center;padding:32px;color:var(--text-dim)">No requests found</td></tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</div>
+{% endblock %}

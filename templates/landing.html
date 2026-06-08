@@ -1,0 +1,180 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>EDUSYNC — CVR College of Engineering</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+:root{--bg:#0F172A;--surface:#1E293B;--border:#334155;--primary:#6366F1;--text:#F1F5F9;--muted:#94A3B8}
+body{font-family:'Inter',sans-serif;background:var(--bg);color:var(--text);
+  min-height:100vh;display:flex;flex-direction:column}
+
+/* Grid background */
+body::before{content:'';position:fixed;inset:0;
+  background-image:linear-gradient(rgba(99,102,241,0.04) 1px,transparent 1px),
+  linear-gradient(90deg,rgba(99,102,241,0.04) 1px,transparent 1px);
+  background-size:48px 48px;pointer-events:none;z-index:0}
+
+/* Glow orbs */
+.orb{position:fixed;border-radius:50%;filter:blur(100px);pointer-events:none;z-index:0}
+.orb1{width:500px;height:500px;background:rgba(99,102,241,0.12);top:-100px;right:-100px}
+.orb2{width:400px;height:400px;background:rgba(16,185,129,0.07);bottom:-80px;left:-80px}
+.orb3{width:300px;height:300px;background:rgba(245,158,11,0.05);top:40%;left:40%}
+
+/* Header */
+.header{position:relative;z-index:1;padding:20px 32px;
+  display:flex;align-items:center;justify-content:space-between;
+  border-bottom:1px solid rgba(99,102,241,0.15)}
+.header-brand{display:flex;align-items:center;gap:12px}
+.header-icon{width:38px;height:38px;border-radius:10px;
+  background:linear-gradient(135deg,#6366F1,#4F46E5);
+  display:flex;align-items:center;justify-content:center}
+.header-icon svg{width:22px;height:22px;color:#fff}
+.header-name{font-size:18px;font-weight:700;letter-spacing:-.01em}
+.header-college{font-size:11px;color:var(--muted);margin-top:1px}
+.header-badge{background:rgba(99,102,241,0.15);color:#818CF8;
+  font-size:11px;font-weight:600;padding:4px 12px;border-radius:20px;
+  border:1px solid rgba(99,102,241,0.25)}
+
+/* Hero */
+.hero{position:relative;z-index:1;text-align:center;padding:60px 20px 40px}
+.hero-tag{display:inline-flex;align-items:center;gap:6px;
+  background:rgba(99,102,241,0.1);border:1px solid rgba(99,102,241,0.25);
+  color:#818CF8;font-size:12px;font-weight:600;padding:5px 14px;
+  border-radius:20px;margin-bottom:24px;letter-spacing:.05em;text-transform:uppercase}
+.hero h1{font-size:clamp(32px,6vw,56px);font-weight:800;
+  letter-spacing:-.03em;line-height:1.1;margin-bottom:16px}
+.hero h1 span{background:linear-gradient(135deg,#6366F1,#818CF8,#38BDF8);
+  -webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text}
+.hero p{font-size:16px;color:var(--muted);max-width:520px;
+  margin:0 auto 48px;line-height:1.7}
+
+/* Role cards */
+.cards-wrap{position:relative;z-index:1;
+  display:flex;justify-content:center;gap:20px;
+  padding:0 20px 60px;flex-wrap:wrap}
+.role-card{width:240px;background:var(--surface);
+  border:1px solid var(--border);border-radius:20px;
+  padding:28px 24px;text-align:center;text-decoration:none;
+  color:var(--text);transition:all .2s;cursor:pointer;
+  position:relative;overflow:hidden}
+.role-card::before{content:'';position:absolute;inset:0;
+  border-radius:20px;opacity:0;transition:opacity .2s}
+.role-card:hover{transform:translateY(-6px);border-color:var(--card-color)}
+.role-card:hover::before{opacity:1}
+.role-card:hover .role-arrow{transform:translateX(4px)}
+
+.role-card.admin{--card-color:#6366F1}
+.role-card.admin::before{background:linear-gradient(135deg,rgba(99,102,241,0.08),transparent)}
+.role-card.teacher{--card-color:#10B981}
+.role-card.teacher::before{background:linear-gradient(135deg,rgba(16,185,129,0.08),transparent)}
+.role-card.student{--card-color:#F59E0B}
+.role-card.student::before{background:linear-gradient(135deg,rgba(245,158,11,0.08),transparent)}
+
+.role-icon{width:56px;height:56px;border-radius:16px;
+  display:flex;align-items:center;justify-content:center;
+  font-size:26px;margin:0 auto 16px;transition:transform .2s}
+.role-card:hover .role-icon{transform:scale(1.1)}
+.role-card.admin    .role-icon{background:rgba(99,102,241,0.15)}
+.role-card.teacher  .role-icon{background:rgba(16,185,129,0.15)}
+.role-card.student  .role-icon{background:rgba(245,158,11,0.15)}
+
+.role-title{font-size:17px;font-weight:700;margin-bottom:6px}
+.role-desc{font-size:12px;color:var(--muted);line-height:1.5;margin-bottom:16px}
+.role-btn{display:inline-flex;align-items:center;gap:6px;
+  font-size:13px;font-weight:600;padding:8px 18px;
+  border-radius:8px;border:1.5px solid;transition:all .2s}
+.role-card.admin   .role-btn{color:#818CF8;border-color:rgba(99,102,241,0.4)}
+.role-card.teacher .role-btn{color:#34D399;border-color:rgba(16,185,129,0.4)}
+.role-card.student .role-btn{color:#FBBF24;border-color:rgba(245,158,11,0.4)}
+.role-card:hover .role-btn{background:rgba(255,255,255,0.06)}
+.role-arrow{display:inline-block;transition:transform .2s}
+
+/* Features strip */
+.features{position:relative;z-index:1;
+  border-top:1px solid rgba(255,255,255,0.06);
+  padding:28px 32px;
+  display:flex;justify-content:center;gap:40px;flex-wrap:wrap}
+.feature{display:flex;align-items:center;gap:8px;font-size:12px;color:var(--muted)}
+.feature-dot{width:6px;height:6px;border-radius:50%;background:#6366F1;flex-shrink:0}
+
+/* Footer */
+.footer{position:relative;z-index:1;text-align:center;
+  padding:16px;font-size:11px;color:#475569;
+  border-top:1px solid rgba(255,255,255,0.04)}
+</style>
+</head>
+<body>
+
+<div class="orb orb1"></div>
+<div class="orb orb2"></div>
+<div class="orb orb3"></div>
+
+<!-- Header -->
+<header class="header">
+  <div class="header-brand">
+    <div class="header-icon">
+      <svg fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+        <path stroke-linecap="round" stroke-linejoin="round" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253"/>
+      </svg>
+    </div>
+    <div>
+      <div class="header-name">EDUSYNC</div>
+      <div class="header-college">CVR College of Engineering</div>
+    </div>
+  </div>
+  <div class="header-badge">Smart Academic Staff Platform</div>
+</header>
+
+<!-- Hero -->
+<div class="hero">
+  <div class="hero-tag">
+    <span>⚡</span> AI-Powered Platform
+  </div>
+  <h1>Welcome to <span>EDUSYNC</span></h1>
+  <p>A unified platform for managing academic staff — attendance, leaves, subject allocation, and performance analytics.</p>
+</div>
+
+<!-- Role Cards -->
+<div class="cards-wrap">
+  <a href="/login" class="role-card admin">
+    <div class="role-icon">🏫</div>
+    <div class="role-title">Administrator</div>
+    <div class="role-desc">Manage teachers, approve leaves, post announcements, and view analytics.</div>
+    <div class="role-btn">Sign In <span class="role-arrow">→</span></div>
+  </a>
+
+  <a href="/login" class="role-card teacher">
+    <div class="role-icon">👨‍🏫</div>
+    <div class="role-title">Teacher</div>
+    <div class="role-desc">Mark attendance, apply for leave, and submit subject preferences.</div>
+    <div class="role-btn">Sign In <span class="role-arrow">→</span></div>
+  </a>
+
+  <a href="/student/login" class="role-card student">
+    <div class="role-icon">🎓</div>
+    <div class="role-title">Student</div>
+    <div class="role-desc">Submit feedback for your teachers to help improve teaching quality.</div>
+    <div class="role-btn">Give Feedback <span class="role-arrow">→</span></div>
+  </a>
+</div>
+
+<!-- Features strip -->
+<div class="features">
+  <div class="feature"><div class="feature-dot"></div>GPS Attendance Tracking</div>
+  <div class="feature"><div class="feature-dot"></div>AI Subject Allocation</div>
+  <div class="feature"><div class="feature-dot"></div>Sentiment Analysis</div>
+  <div class="feature"><div class="feature-dot"></div>Role-Based Access</div>
+  <div class="feature"><div class="feature-dot"></div>Real-Time Notifications</div>
+  <div class="feature"><div class="feature-dot"></div>Performance Analytics</div>
+</div>
+
+<!-- Footer -->
+<div class="footer">
+  EDUSYNC · CVR College of Engineering · Department of CSE (AI&ML) · 2026
+</div>
+
+</body>
+</html>
